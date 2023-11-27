@@ -3,7 +3,7 @@
   if abstract_ja != [] {
     show <_ja_abstract_>: {
       align(center)[
-        #text(size: 18pt, "概要")
+        #text(size: 20pt, "概要")
       ]
     }
     [= 概要 <_ja_abstract_>]
@@ -38,16 +38,18 @@
 
 #let toc() = {
   align(left)[
-    #text(size: 18pt, "目次")
+    #text(size: 20pt, weight: "bold")[
+      #v(30pt)
+      目次
+      #v(30pt)
+    ]
   ]
 
   set text(size: 12pt)
-  // 临时取消目录的首行缩进
   set par(leading: 1.24em, first-line-indent: 0pt)
   locate(loc => {
     let elements = query(heading.where(outlined: true), loc)
     for el in elements {
-      // 是否有 el 位于前面，前面的目录中用拉丁数字，后面的用阿拉伯数字
       let before_toc = query(heading.where(outlined: true).before(loc), loc).find((one) => {one.body == el.body}) != none
       let page_num = if before_toc {
         numbering("i", counter(page).at(el.location()).first())
@@ -68,19 +70,28 @@
             "  "
           }
           el.body
+        } else if el.level == 2 {
+          h(2em)
+          chapt_num
+          " "
+          el.body
         } else {
+          h(5em)
           chapt_num
           " "
           el.body
         }
       }]
-
-      // 填充 ......
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
       [#page_num]
       linebreak()
     }
   })
+}
+
+#let empty_par() = {
+  v(-1em)
+  box()
 }
 
 #let master_thesis(
@@ -142,7 +153,7 @@
     )[
       #university #school #department
     ]
-    
+
     #text(
       size: 16pt,
     )[
@@ -180,21 +191,52 @@
       #align(center)[#counter(page).display("i")]
     ]
   )
-  
-  
 
-  // Configure paragraph properties.
-  set par(leading: 0.78em, first-line-indent: 12pt, justify: true)
-  show par: set block(spacing: 0.78em)
-  
   counter(page).update(1)
   // Show abstruct
   abstract_page(abstract_ja, abstract_en, keywords_ja: keywords_ja, keywords_en: keywords_en)
   pagebreak()
 
+  // Configure paragraph properties.
+  set par(leading: 0.78em, first-line-indent: 12pt, justify: true)
+  show par: set block(spacing: 0.78em)
+
+   // Configure chapter headings.
+  set heading(numbering: (..nums) => {
+    nums.pos().map(str).join(".") + " "
+  })
+  show heading.where(level: 1): it => {
+    pagebreak()
+    set text(weight: "bold", size: 20pt)
+    set block(spacing: 1.5em)
+    let pre_chapt = if it.numbering != none {
+          text()[
+            #v(50pt)
+            第
+            #numbering(it.numbering, ..counter(heading).at(it.location()))
+            章
+          ] 
+        } else {none}
+    text()[
+      #pre_chapt \
+      #it.body \
+      #v(50pt)
+    ]
+  }
+  show heading.where(level: 2): it => {
+    set text(weight: "bold", size: 16pt)
+    set block(above: 1.5em, below: 1.5em)
+    it
+  }
+
+  show heading: it => {
+    set text(weight: "bold", size: 14pt)
+    set block(above: 1.5em, below: 1.5em)
+    it
+  } + empty_par()
+
 
   // Start with a chapter outline.
-  // outline(title: [目次])
   toc()
 
   set page(
@@ -206,50 +248,33 @@
   counter(page).update(1)
 
   // Configure page properties.
-  set page(
-    numbering: "1",
+  // set page(
+  //   numbering: "1",
 
-    // The header always contains the book title on odd pages and
-    // the chapter title on even pages, unless the page is one
-    // the starts a chapter (the chapter title is obvious then).
-    header: locate(loc => {
-      // Are we on an odd page?
-      let i = counter(page).at(loc).first()
-      if calc.odd(i) {
-        return text(0.95em, smallcaps(title))
-      }
+  //   // The header always contains the book title on odd pages and
+  //   // the chapter title on even pages, unless the page is one
+  //   // the starts a chapter (the chapter title is obvious then).
+  //   header: locate(loc => {
+  //     // Are we on an odd page?
+  //     let i = counter(page).at(loc).first()
+  //     if calc.odd(i) {
+  //       return text(0.95em, smallcaps(title))
+  //     }
 
-      // Are we on a page that starts a chapter? (We also check
-      // the previous page because some headings contain pagebreaks.)
-      let all = query(heading, loc)
-      if all.any(it => it.location().page() in (i - 1, i)) {
-        return
-      }
+  //     // Are we on a page that starts a chapter? (We also check
+  //     // the previous page because some headings contain pagebreaks.)
+  //     let all = query(heading, loc)
+  //     if all.any(it => it.location().page() in (i - 1, i)) {
+  //       return
+  //     }
 
-      // Find the heading of the section we are currently in.
-      let before = query(selector(heading).before(loc), loc)
-      if before != () {
-        align(right, text(0.95em, smallcaps(before.last().body)))
-      }
-    }),
-  )
-
-  // Configure chapter headings.
-  show heading.where(level: 1): it => {
-    // Always start on odd pages.
-    pagebreak(to: "odd")
-
-    // Create the heading numbering.
-    let number = if it.numbering != none {
-      counter(heading).display(it.numbering)
-      h(7pt, weak: true)
-    }
-
-    v(5%)
-    text(2em, weight: 700, block([#number #it.body]))
-    v(1.25em)
-  }
-  show heading: set text(weight: 400)
+  //     // Find the heading of the section we are currently in.
+  //     let before = query(selector(heading).before(loc), loc)
+  //     if before != () {
+  //       align(right, text(0.95em, smallcaps(before.last().body)))
+  //     }
+  //   }),
+  // )
 
   body
 
@@ -258,4 +283,20 @@
     show bibliography: set text(12pt)
     bibliography(bibliography-file, title: "参考文献", style: "ieee")
   }
+}
+
+#let LATEX = {
+  [L];box(move(
+    dx: -4.2pt, dy: -1.2pt,
+    box(scale(65%)[A])
+  ));box(move(
+  dx: -5.7pt, dy: 0pt,
+  [T]
+));box(move(
+  dx: -7.0pt, dy: 2.7pt,
+  box(scale(100%)[E])
+));box(move(
+  dx: -8.0pt, dy: 0pt,
+  [X]
+));h(-8.0pt)
 }
