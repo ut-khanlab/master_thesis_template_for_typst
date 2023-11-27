@@ -142,6 +142,7 @@
     )[
       #university #school #department
     ]
+    
     #text(
       size: 16pt,
     )[
@@ -159,6 +160,7 @@
     )[
       #id #author
     ]
+
     #text(
       size: 16pt,
     )[
