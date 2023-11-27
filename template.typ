@@ -195,6 +195,14 @@
   // outline(title: [目次])
   toc()
 
+  set page(
+    footer: [
+      #align(center)[#counter(page).display("1")]
+    ]
+  )
+
+  counter(page).update(1)
+
   // Configure page properties.
   set page(
     numbering: "1",
@@ -245,7 +253,7 @@
 
   // Display bibliography.
   if bibliography-file != none {
-    show bibliography: set text(8pt)
+    show bibliography: set text(12pt)
     bibliography(bibliography-file, title: "参考文献", style: "ieee")
   }
 }
