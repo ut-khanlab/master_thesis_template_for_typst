@@ -147,6 +147,64 @@
   })
 }
 
+#let toc_img() = {
+  align(left)[
+    #text(size: 20pt, weight: "bold")[
+      #v(30pt)
+      図目次
+      #v(30pt)
+    ]
+  ]
+
+  set text(size: 12pt)
+  set par(leading: 1.24em, first-line-indent: 0pt)
+  locate(loc => {
+    let elements = query(figure.where(outlined: true, kind: "image"), loc)
+    for el in elements {
+      let chapt = counter(heading).at(el.location()).at(0)
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
+      let page_num = counter(page).at(el.location()).first()
+      str(chapt)
+      "."
+      str(num)
+      h(1em)
+      el.caption.body
+      box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
+      [#page_num]
+      linebreak()
+    }
+  })
+}
+
+#let toc_tbl() = {
+  align(left)[
+    #text(size: 20pt, weight: "bold")[
+      #v(30pt)
+      表目次
+      #v(30pt)
+    ]
+  ]
+
+  set text(size: 12pt)
+  set par(leading: 1.24em, first-line-indent: 0pt)
+   locate(loc => {
+    let elements = query(figure.where(outlined: true, kind: "table"), loc)
+    for el in elements {
+      let chapt = counter(heading).at(el.location()).at(0)
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
+      let page_num = counter(page).at(el.location()).first()
+      str(chapt)
+      "."
+      str(num)
+      h(1em)
+      el.caption.body
+      box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
+      [#page_num]
+      linebreak()
+    }
+  })
+}
+
 #let empty_par() = {
   v(-1em)
   box()
@@ -216,9 +274,9 @@
     if it.kind == "image" {
       set text(size: 12pt)
       it.body
-      // it.supplement
-      // " " + it.counter.display(it.numbering)
-      " " + it.caption
+      it.supplement
+      " " + it.counter.display(it.numbering)
+      " " + it.caption.body
       locate(loc => {
         let chapt = counter(heading).at(loc).at(0)
         let c = counter("image-chapter" + str(chapt))
@@ -226,9 +284,9 @@
       })
     } else if it.kind == "table" {
       set text(size: 12pt)
-      // it.supplement
-      // it.counter.display(it.numbering)
-      " " + it.caption
+      it.supplement
+      " " + it.counter.display(it.numbering)
+      " " + it.caption.body
       set text(size: 10.5pt)
       it.body
       locate(loc => {
@@ -352,6 +410,10 @@
 
   // Start with a chapter outline.
   toc()
+  pagebreak()
+  toc_img()
+  pagebreak()
+  toc_tbl()
 
   set page(
     footer: [
@@ -360,35 +422,7 @@
   )
 
   counter(page).update(1)
-
-  // Configure page properties.
-  // set page(
-  //   numbering: "1",
-
-  //   // The header always contains the book title on odd pages and
-  //   // the chapter title on even pages, unless the page is one
-  //   // the starts a chapter (the chapter title is obvious then).
-  //   header: locate(loc => {
-  //     // Are we on an odd page?
-  //     let i = counter(page).at(loc).first()
-  //     if calc.odd(i) {
-  //       return text(0.95em, smallcaps(title))
-  //     }
-
-  //     // Are we on a page that starts a chapter? (We also check
-  //     // the previous page because some headings contain pagebreaks.)
-  //     let all = query(heading, loc)
-  //     if all.any(it => it.location().page() in (i - 1, i)) {
-  //       return
-  //     }
-
-  //     // Find the heading of the section we are currently in.
-  //     let before = query(selector(heading).before(loc), loc)
-  //     if before != () {
-  //       align(right, text(0.95em, smallcaps(before.last().body)))
-  //     }
-  //   }),
-  // )
+ 
   set math.equation(supplement: [式], numbering: equation_num)
 
   body
