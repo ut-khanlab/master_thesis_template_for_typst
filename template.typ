@@ -1,3 +1,59 @@
+#let indent() = {
+  box(width: 2em)
+}
+
+#let indent_par(body) = {
+  box(width: 1.8em)
+  body
+}
+
+#let equation_num(_) = {
+  locate(loc => {
+    let chapt = counter(heading).at(loc).at(0)
+    let c = counter(math.equation)
+    let n = c.at(loc).at(0)
+    "(" + str(chapt) + "." + str(n) + ")"
+  })
+}
+
+#let table_num(_) = {
+  locate(loc => {
+    let chapt = counter(heading).at(loc).at(0)
+    let c = counter("table-chapter" + str(chapt))
+    let n = c.at(loc).at(0)
+    str(chapt) + "." + str(n + 1)
+  })
+}
+
+#let image_num(_) = {
+  locate(loc => {
+    let chapt = counter(heading).at(loc).at(0)
+    let c = counter("image-chapter" + str(chapt))
+    let n = c.at(loc).at(0)
+    str(chapt) + "." + str(n + 1)
+  })
+}
+
+#let tbl(tbl, caption: "") = {
+  figure(
+    tbl,
+    caption: caption,
+    supplement: [表],
+    numbering: table_num,
+    kind: "table",
+  )
+}
+
+#let img(img, caption: "") = {
+  figure(
+    img,
+    caption: caption,
+    supplement: [図],
+    numbering: image_num,
+    kind: "image",
+  )
+}
+
 // definition of abstruct page
 #let abstract_page(abstract_ja, abstract_en, keywords_ja: (), keywords_en: ()) = {
   if abstract_ja != [] {
@@ -10,6 +66,7 @@
 
     v(30pt)
     set text(size: 12pt)
+    h(1em)
     abstract_ja
     par(first-line-indent: 0em)[
       #text(weight: "bold", size: 12pt)[
@@ -25,6 +82,7 @@
     [= Abstract <_en_abstract_>]
 
     set text(size: 12pt)
+    h(1em)
     abstract_en
     par(first-line-indent: 0em)[
       #text(weight: "bold", size: 12pt)[
@@ -129,6 +187,60 @@
   // The paper's content.
   body,
 ) = {
+  show ref: it => {
+    if it.element != none and it.element.func() == figure {
+      let el = it.element
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+
+      link(loc)[#if el.kind == "image" or el.kind == "table" {
+          // 章ごとに数字をカウント
+          let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+          it.element.supplement
+          " "
+          str(chapt)
+          "."
+          str(num)
+        } else {
+          it
+        }
+      ]
+    } else {
+      it
+    }
+  }
+
+  // caotion番号の更新
+  show figure: it => {
+    set align(center)
+    if it.kind == "image" {
+      set text(size: 12pt)
+      it.body
+      // it.supplement
+      // " " + it.counter.display(it.numbering)
+      " " + it.caption
+      locate(loc => {
+        let chapt = counter(heading).at(loc).at(0)
+        let c = counter("image-chapter" + str(chapt))
+        c.step()
+      })
+    } else if it.kind == "table" {
+      set text(size: 12pt)
+      // it.supplement
+      // it.counter.display(it.numbering)
+      " " + it.caption
+      set text(size: 10.5pt)
+      it.body
+      locate(loc => {
+        let chapt = counter(heading).at(loc).at(0)
+        let c = counter("table-chapter" + str(chapt))
+        c.step()
+      })
+    } else {
+      it
+    }
+  }
+
   // Set the document's metadata.
   set document(title: title, author: author)
 
@@ -136,7 +248,8 @@
   // to Palatino.
   set text(font: (
     "Nimbus Roman",
-    "Noto Serif CJK JP"
+    // "Hiragino Mincho ProN",
+    "Noto Serif CJK JP",
     ), size: 12pt)
 
   // Configure the page properties.
@@ -207,6 +320,7 @@
   })
   show heading.where(level: 1): it => {
     pagebreak()
+    counter(math.equation).update(0)
     set text(weight: "bold", size: 20pt)
     set block(spacing: 1.5em)
     let pre_chapt = if it.numbering != none {
@@ -275,6 +389,7 @@
   //     }
   //   }),
   // )
+  set math.equation(supplement: [式], numbering: equation_num)
 
   body
 
