@@ -182,7 +182,7 @@
 
   // The path to a bibliography file if you want to cite some external
   // works.
-  bibliography-file: "references.bib",
+  bibliography-file: none,
 
   // The paper's content.
   body,
