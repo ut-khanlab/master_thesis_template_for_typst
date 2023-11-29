@@ -54,7 +54,6 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 
 = 先行研究
 
-
 #LATEX はカスタム性の高さ, 歴史的なところからまだまだ廃れないとは思いますが, 卒論や修論や学会の予稿等の作成においてはTypst @madje2022programmable の使いやすさから置き換わるのではないかと思います(半分願望).
 #img(
   image("Figures/typst-github.svg", width: 20%),
@@ -77,6 +76,125 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 
 = 定義
 
-Typstでは関数定義が簡単であるので定理の書き方などをカスタマイズできます
+Typstでは関数定義が簡単であるので定理の書き方などをカスタマイズできます.
 
 == 定義例
+`thmbox`関数を作ってカスタマイズをできるようにしました.
+```typ
+#let theorem = thmbox(
+  "theorem", //identifier
+  "定理",
+  base_level: 1
+)
+
+#theorem("ヲイラ-")[
+  Typst はすごいのである.
+] <theorem>
+```
+
+#let theorem = thmbox(
+  "theorem",
+  "定理",
+  base_level: 1
+)
+
+#theorem("ヲイラ-")[
+  Typst はすごいのである.
+] <theorem>
+
+```typ
+#let lemma = thmbox(
+  "theorem", //identifier
+  "補題",
+  base_level: 1,
+)
+
+#lemma[
+  Texはさようならである.
+] <lemma>
+```
+#let lemma = thmbox(
+  "theorem",
+  "補題",
+  base_level: 1,
+)
+
+#lemma[
+  Texはさようならである.
+] <lemma>
+
+このように, @theorem , @lemma を定義できます .\
+カッコ内の引数に人名などを入れることができます.
+また, identifierを変えれば, カウントはリセットされる.
+identifier毎にカウントを柔軟に変えられるようにしてあるので, 様々な論文の形式に対応できるはずです.
+```typ
+#let definition = thmbox(
+  "definition", //identifier
+  "定義",
+  base_level: 1,
+  stroke: black + 1pt
+)
+#definition("Prime numbers")[
+  A natural number is called a _prime number_ if it is greater than $1$ and
+  cannot be written as the product of two smaller natural numbers. 
+] <definition>
+```
+
+#let definition = thmbox(
+  "definition",
+  "定義",
+  base_level: 1,
+  stroke: black + 1pt,
+)
+
+#definition[
+  Typst is a new markup-based typesetting system for the sciences. 
+] <definition>
+
+@definition のようにカウントがリセットされています.
+
+```typ
+#let corollary = thmbox(
+  "corollary",
+  "Corollary",
+  base: "theorem",
+)
+
+#corollary[
+  If $n$ divides two consecutive natural numbers, then $n = 1$.
+] <corollary>
+```
+
+#let corollary = thmbox(
+  "corollary",
+  "Corollary",
+  base: "theorem",
+)
+
+#corollary[
+  If $n$ divides two consecutive natural numbers, then $n = 1$.
+] <corollary>
+
+baseにidentifierを入れることで@corollary のようにサブカウントを実現できます.
+
+```typ
+#let example = thmplain(
+  "example",
+  "Example"
+).with(numbering: none)
+
+#example[
+  数式は\$\$で囲む
+] <example>
+```
+
+#let example = thmplain(
+  "example",
+  "例"
+).with(numbering: none)
+
+#example[
+  数式は\$\$で囲む
+] <example>
+
+thmplain関数を使ってplain表現も可能です.
