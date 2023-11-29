@@ -39,7 +39,7 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 関数を作れば
 #img(
   image("Figures/typst.svg", width: 20%),
-  caption: "イメージ",
+  caption: [イメージ],
 ) <img1>\
 @img1 を表示できますし,
 
@@ -48,7 +48,7 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
     [t], [1], [2], [3],
     [y], [0.3s], [0.4s], [0.8s],
   ),
-  caption: "テーブル",
+  caption: [テーブル @madje2022programmable],
 ) <tbl1>
 @tbl1 も表示できます.
 
@@ -59,7 +59,7 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 #LATEX はカスタム性の高さ, 歴史的なところからまだまだ廃れないとは思いますが, 卒論や修論や学会の予稿等の作成においてはTypst @madje2022programmable の使いやすさから置き換わるのではないかと思います(半分願望).
 #img(
   image("Figures/typst-github.svg", width: 20%),
-  caption: "Typst + git",
+  caption: [Typst + git @madje2022programmable],
 ) <img2>
 
 === #LATEX はコンパイルが遅い
@@ -75,3 +75,25 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 詳しくは#link("https://typst.app/docs")[
   公式ドキュメント
 ]をご覧ください
+
+= 定義
+
+Typstでは関数定義が簡単であるので定理の書き方などをカスタマイズできます
+
+== 定義例
+#let definition = thmbox(
+  "definition",
+  "定義",
+  base_level: 1,
+  stroke: black + 1pt,
+)
+
+#definition("Prime numbers")[
+  A natural number is called
+]
+
+#definition("Prime numbers")[
+  A natural number is called 
+]<prime>
+
+@prime ですよ @eq1

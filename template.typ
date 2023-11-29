@@ -1,12 +1,163 @@
-#let indent() = {
-  box(width: 2em)
+// Store theorem environment numbering
+
+#let thmcounters = state("thm",
+  (
+    "counters": ("heading": ()),
+    "latest": ()
+  )
+)
+
+
+#let thmenv(identifier, base, base_level, fmt) = {
+
+  let global_numbering = numbering
+
+  return (
+    ..args,
+    body,
+    number: auto,
+    numbering: "1.1",
+    refnumbering: auto,
+    supplement: identifier,
+    base: base,
+    base_level: base_level
+  ) => {
+    let name = none
+    if args != none and args.pos().len() > 0 {
+      name = args.pos().first()
+    }
+    if refnumbering == auto {
+      refnumbering = numbering
+    }
+    let result = none
+    if number == auto and numbering == none {
+      number = none
+    }
+    if number == auto and numbering != none {
+      result = locate(loc => {
+        return thmcounters.update(thmpair => {
+          let counters = thmpair.at("counters")
+          // Manually update heading counter
+          counters.at("heading") = counter(heading).at(loc)
+          if not identifier in counters.keys() {
+            counters.insert(identifier, (0, ))
+          }
+
+          let tc = counters.at(identifier)
+          if base != none {
+            let bc = counters.at(base)
+
+            // Pad or chop the base count
+            if base_level != none {
+              if bc.len() < base_level {
+                bc = bc + (0,) * (base_level - bc.len())
+              } else if bc.len() > base_level{
+                bc = bc.slice(0, base_level)
+              }
+            }
+
+            // Reset counter if the base counter has updated
+            if tc.slice(0, -1) == bc {
+              counters.at(identifier) = (..bc, tc.last() + 1)
+            } else {
+              counters.at(identifier) = (..bc, 1)
+            }
+          } else {
+            // If we have no base counter, just count one level
+            counters.at(identifier) = (tc.last() + 1,)
+            let latest = counters.at(identifier)
+          }
+
+          let latest = counters.at(identifier)
+          return (
+            "counters": counters,
+            "latest": latest
+          )
+        })
+      })
+
+      number = thmcounters.display(x => {
+        return global_numbering(numbering, ..x.at("latest"))
+      })
+    }
+
+    return figure(
+      result +  // hacky!
+      fmt(name, number, body, ..args.named()) +
+      [#metadata(identifier) <meta:thmenvcounter>],
+      kind: "thmenv",
+      outlined: false,
+      caption: none,
+      supplement: supplement,
+      numbering: refnumbering,
+    )
+  }
 }
 
-#let indent_par(body) = {
-  box(width: 1.8em)
-  body
+
+#let thmbox(
+  identifier,
+  head,
+  ..blockargs,
+  supplement: auto,
+  padding: (top: 0.5em, bottom: 0.5em),
+  namefmt: x => [(#x)],
+  titlefmt: strong,
+  bodyfmt: x => x,
+  separator: [#h(0.1em):#h(0.2em)],
+  base: "heading",
+  base_level: none,
+) = {
+  if supplement == auto {
+    supplement = head
+  }
+  let boxfmt(name, number, body, title: auto) = {
+    if not name == none {
+      name = [ #namefmt(name)]
+    } else {
+      name = []
+    }
+    if title == auto {
+      title = head
+    }
+    if number != none {
+      title += " " + number
+    }
+    title = titlefmt(title)
+    body = bodyfmt(body)
+    pad(
+      ..padding,
+      block(
+        width: 100%,
+        inset: 1.2em,
+        radius: 0.3em,
+        breakable: false,
+        ..blockargs.named(),
+        [#title#name#separator#body]
+      )
+    )
+  }
+  return thmenv(
+    identifier,
+    base,
+    base_level,
+    boxfmt
+  ).with(
+    supplement: supplement,
+  )
 }
 
+
+#let thmplain = thmbox.with(
+  padding: (top: 0em, bottom: 0em),
+  breakable: true,
+  inset: (top: 0em, left: 1.2em, right: 1.2em),
+  namefmt: name => emph([(#name)]),
+  titlefmt: emph,
+)
+
+
+// Counting equation number
 #let equation_num(_) = {
   locate(loc => {
     let chapt = counter(heading).at(loc).at(0)
@@ -16,6 +167,7 @@
   })
 }
 
+// Counting table number
 #let table_num(_) = {
   locate(loc => {
     let chapt = counter(heading).at(loc).at(0)
@@ -25,6 +177,7 @@
   })
 }
 
+// Counting image number
 #let image_num(_) = {
   locate(loc => {
     let chapt = counter(heading).at(loc).at(0)
@@ -34,6 +187,7 @@
   })
 }
 
+// Definition of table format
 #let tbl(tbl, caption: "") = {
   figure(
     tbl,
@@ -44,6 +198,7 @@
   )
 }
 
+// Definition of image format
 #let img(img, caption: "") = {
   figure(
     img,
@@ -54,7 +209,7 @@
   )
 }
 
-// definition of abstruct page
+// Definition of abstruct page
 #let abstract_page(abstract_ja, abstract_en, keywords_ja: (), keywords_en: ()) = {
   if abstract_ja != [] {
     show <_ja_abstract_>: {
@@ -70,7 +225,8 @@
     abstract_ja
     par(first-line-indent: 0em)[
       #text(weight: "bold", size: 12pt)[
-      // #keywords_ja.join("; ")
+      キーワード:
+      #keywords_ja.join(", ")
       ]
     ]
   } else {
@@ -87,13 +243,26 @@
     par(first-line-indent: 0em)[
       #text(weight: "bold", size: 12pt)[
         Key Words: 
-        // #keywords_en.join("; ")
+        #keywords_en.join("; ")
       ]
     ]
   }
-  
 }
 
+// Definition of content to string
+#let to-string(content) = {
+  if content.has("text") {
+    content.text
+  } else if content.has("children") {
+    content.children.map(to-string).join("")
+  } else if content.has("body") {
+    to-string(content.body)
+  } else if content == [ ] {
+    " "
+  }
+}
+
+// Definition of chapter outline
 #let toc() = {
   align(left)[
     #text(size: 20pt, weight: "bold")[
@@ -127,17 +296,20 @@
             chapt_num
             "  "
           }
-          el.body
+          let rebody = to-string(el.body)
+          rebody
         } else if el.level == 2 {
           h(2em)
           chapt_num
           " "
-          el.body
+          let rebody = to-string(el.body)
+          rebody
         } else {
           h(5em)
           chapt_num
           " "
-          el.body
+          let rebody = to-string(el.body)
+          rebody
         }
       }]
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
@@ -147,6 +319,7 @@
   })
 }
 
+// Definition of image outline
 #let toc_img() = {
   align(left)[
     #text(size: 20pt, weight: "bold")[
@@ -164,11 +337,12 @@
       let chapt = counter(heading).at(el.location()).at(0)
       let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
       let page_num = counter(page).at(el.location()).first()
+      let caption_body = to-string(el.caption.body)
       str(chapt)
       "."
       str(num)
       h(1em)
-      el.caption.body
+      caption_body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
       [#page_num]
       linebreak()
@@ -176,6 +350,7 @@
   })
 }
 
+// Definition of table outline
 #let toc_tbl() = {
   align(left)[
     #text(size: 20pt, weight: "bold")[
@@ -193,11 +368,12 @@
       let chapt = counter(heading).at(el.location()).at(0)
       let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
       let page_num = counter(page).at(el.location()).first()
+      let caption_body = to-string(el.caption.body)
       str(chapt)
       "."
       str(num)
       h(1em)
-      el.caption.body
+      caption_body
       box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
       [#page_num]
       linebreak()
@@ -205,11 +381,13 @@
   })
 }
 
+// Setting empty par
 #let empty_par() = {
   v(-1em)
   box()
 }
 
+// Construction
 #let master_thesis(
   // The master thesis title.
   title: "ここにtitleが入る",
@@ -434,6 +612,7 @@
   }
 }
 
+// LATEX character
 #let LATEX = {
   [L];box(move(
     dx: -4.2pt, dy: -1.2pt,
