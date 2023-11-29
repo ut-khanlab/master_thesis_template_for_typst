@@ -54,7 +54,6 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 
 = 先行研究
 
-== #LATEX はオワコンだ
 
 #LATEX はカスタム性の高さ, 歴史的なところからまだまだ廃れないとは思いますが, 卒論や修論や学会の予稿等の作成においてはTypst @madje2022programmable の使いやすさから置き換わるのではないかと思います(半分願望).
 #img(
@@ -81,18 +80,3 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 Typstでは関数定義が簡単であるので定理の書き方などをカスタマイズできます
 
 == 定義例
-#let definition = thmbox(
-  "definition",
-  "定義",
-  base_level: 1,
-  stroke: black + 1pt,
-)
-
-#definition("Prime numbers")[
-  A natural number is called
-]
-
-#definition("Prime numbers")[
-  A natural number is called 
-]<prime>
-
