@@ -96,4 +96,3 @@ Typstでは関数定義が簡単であるので定理の書き方などをカス
   A natural number is called 
 ]<prime>
 
-@prime ですよ @eq1

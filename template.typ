@@ -430,7 +430,7 @@
       let chapt = counter(heading).at(loc).at(0)
 
       link(loc)[#if el.kind == "image" or el.kind == "table" {
-          // 章ごとに数字をカウント
+          // counting 
           let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
           it.element.supplement
           " "
@@ -441,6 +441,22 @@
           it
         }
       ]
+    } else if it.element != none and it.element.func() == math.equation {
+      let el = it.element
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+      let num = counter(math.equation).at(loc).at(0)
+      // Override equation references.
+      // numbering(
+      //   el.numbering,
+      //   ..counter(math.equation).at(el.location())
+      // )
+      it.element.supplement
+      " ("
+      str(chapt)
+      "."
+      str(num)
+      ")"
     } else {
       it
     }
