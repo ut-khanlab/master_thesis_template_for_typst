@@ -516,6 +516,7 @@
   set text(font: (
     "Nimbus Roman",
     // "Hiragino Mincho ProN",
+    // "MS Mincho",
     "Noto Serif CJK JP",
     ), size: 12pt)
 
