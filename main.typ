@@ -16,7 +16,7 @@
   bibliography-file: "references.bib",
 )
 
-= 序論
+= 序論<Chap_1>
  Typstはmarkdown likeなコーディングでpdf, ポスター, スライド等のドキュメントを作成できます. Rust言語で書かれており, コンパイルが#LATEX に比べて早いのが特長です.
 
 == Typstは優秀だ
@@ -54,7 +54,7 @@ $ A = mat(1, 2; 3, 4) $ <eq1>
 
 = 先行研究
 
-#LATEX はカスタム性の高さ, 歴史的なところからまだまだ廃れないとは思いますが, 卒論や修論や学会の予稿等の作成においてはTypst @madje2022programmable の使いやすさから置き換わるのではないかと思います(半分願望).
+#LATEX はカスタム性の高さ, 歴史的なところからまだまだ廃れないとは思いますが, @Chap_1 の例からも卒論や修論や学会の予稿等の作成においてはTypst @madje2022programmable の使いやすさから置き換わるのではないかと思います(半分願望).
 #img(
   image("Figures/typst-github.svg", width: 20%),
   caption: [Typst + git @madje2022programmable],

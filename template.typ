@@ -33,11 +33,12 @@
       number = none
     }
     if number == auto and numbering != none {
-      result = locate(loc => {
+      result = context {
+        let heading-counter = counter(heading).get()
         return thmcounters.update(thmpair => {
           let counters = thmpair.at("counters")
           // Manually update heading counter
-          counters.at("heading") = counter(heading).at(loc)
+          counters.at("heading") = heading-counter
           if not identifier in counters.keys() {
             counters.insert(identifier, (0, ))
           }
@@ -73,11 +74,11 @@
             "latest": latest
           )
         })
-      })
+      }
 
-      number = thmcounters.display(x => {
-        return global_numbering(numbering, ..x.at("latest"))
-      })
+      number = context {
+        global_numbering(numbering, ..thmcounters.get().at("latest"))
+      }
     }
 
     return figure(
@@ -110,7 +111,7 @@
   if supplement == auto {
     supplement = head
   }
-  let boxfmt(name, number, body, title: auto) = {
+  let boxfmt(name, number, body, title: auto, ..blockargs_individual) = {
     if not name == none {
       name = [ #namefmt(name)]
     } else {
@@ -132,6 +133,7 @@
         radius: 0.3em,
         breakable: false,
         ..blockargs.named(),
+        ..blockargs_individual.named(),
         [#title#name#separator#body]
       )
     )
@@ -157,32 +159,32 @@
 
 // Counting equation number
 #let equation_num(_) = {
-  locate(loc => {
-    let chapt = counter(heading).at(loc).at(0)
+  context {
+    let chapt = counter(heading).get().at(0)
     let c = counter(math.equation)
-    let n = c.at(loc).at(0)
+    let n = c.get().at(0)
     "(" + str(chapt) + "." + str(n) + ")"
-  })
+  }
 }
 
 // Counting table number
 #let table_num(_) = {
-  locate(loc => {
-    let chapt = counter(heading).at(loc).at(0)
+  context {
+    let chapt = counter(heading).get().at(0)
     let c = counter("table-chapter" + str(chapt))
-    let n = c.at(loc).at(0)
+    let n = c.get().at(0)
     str(chapt) + "." + str(n + 1)
-  })
+  }
 }
 
 // Counting image number
 #let image_num(_) = {
-  locate(loc => {
-    let chapt = counter(heading).at(loc).at(0)
+  context {
+    let chapt = counter(heading).get().at(0)
     let c = counter("image-chapter" + str(chapt))
-    let n = c.at(loc).at(0)
+    let n = c.get().at(0)
     str(chapt) + "." + str(n + 1)
-  })
+  }
 }
 
 // Definition of table format
@@ -262,59 +264,50 @@
 
 // Definition of chapter outline
 #let toc() = {
-  align(left)[
-    #text(size: 20pt, weight: "bold")[
-      #v(30pt)
-      目次
-      #v(30pt)
-    ]
-  ]
+ align(left)[
+   #text(size: 20pt, weight: "bold")[
+     #v(30pt)
+     目次
+     #v(30pt)
+   ]
+ ]
 
-  set text(size: 12pt)
-  set par(leading: 1.24em, first-line-indent: 0pt)
-  locate(loc => {
-    let elements = query(heading.where(outlined: true), loc)
-    for el in elements {
-      let before_toc = query(heading.where(outlined: true).before(loc), loc).find((one) => {one.body == el.body}) != none
-      let page_num = if before_toc {
-        numbering("i", counter(page).at(el.location()).first())
-      } else {
-        counter(page).at(el.location()).first()
-      }
+ set text(size: 12pt) 
+ set par(leading: 1.24em, first-line-indent: 0pt)
+ 
+ context {
+   let elements = query(heading.where(outlined: true))
+   for el in elements {
+     let before_toc = query(heading.where(outlined: true).before(here())).find((one) => {one.body == el.body}) != none
+     let page_num = if before_toc {
+       numbering("i", counter(page).at(el.location()).first())
+     } else {
+       counter(page).at(el.location()).first()
+     }
 
-      link(el.location())[#{
-        // acknoledgement has no numbering
-        let chapt_num = if el.numbering != none {
-          numbering(el.numbering, ..counter(heading).at(el.location()))
-        } else {none}
+     link(el.location())[#{
+      // acknoledgement has no numbering
+       let chapt_num = if el.numbering != none {
+         numbering(el.numbering, ..counter(heading).at(el.location()))
+       } else {none}
 
-        if el.level == 1 {
-          set text(weight: "black")
-          if chapt_num == none {} else {
-            chapt_num
-            "  "
-          }
-          let rebody = to-string(el.body)
-          rebody
-        } else if el.level == 2 {
-          h(2em)
-          chapt_num
-          " "
-          let rebody = to-string(el.body)
-          rebody
-        } else {
-          h(5em)
-          chapt_num
-          " "
-          let rebody = to-string(el.body)
-          rebody
-        }
-      }]
-      box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
-      [#page_num]
-      linebreak()
-    }
-  })
+       if el.level == 1 {
+         set text(weight: "black")
+         if chapt_num == none {} else {
+           chapt_num + "  "
+         }
+         to-string(el.body)
+       } else if el.level == 2 {
+         h(2em) + chapt_num + " " + to-string(el.body)
+       } else {
+         h(5em) + chapt_num + " " + to-string(el.body)
+       }
+     }]
+     box(width: 1fr, h(0.5em) + box(width: 1fr, repeat[.]) + h(0.5em))
+     [#page_num]
+     linebreak()
+   }
+ }
 }
 
 // Definition of image outline
@@ -329,13 +322,21 @@
 
   set text(size: 12pt)
   set par(leading: 1.24em, first-line-indent: 0pt)
-  locate(loc => {
-    let elements = query(figure.where(outlined: true, kind: "image"), loc)
+  
+  context {
+    let elements = query(
+      figure.where(
+        outlined: true,
+        kind: "image"
+      )
+    )
     for el in elements {
-      let chapt = counter(heading).at(el.location()).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
-      let page_num = counter(page).at(el.location()).first()
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+      let page_num = counter(page).at(loc).first()
       let caption_body = to-string(el.caption.body)
+      
       str(chapt)
       "."
       str(num)
@@ -345,7 +346,7 @@
       [#page_num]
       linebreak()
     }
-  })
+  }
 }
 
 // Definition of table outline
@@ -360,13 +361,21 @@
 
   set text(size: 12pt)
   set par(leading: 1.24em, first-line-indent: 0pt)
-   locate(loc => {
-    let elements = query(figure.where(outlined: true, kind: "table"), loc)
+  
+  context {
+    let elements = query(
+      figure.where(
+        outlined: true,
+        kind: "table"
+      )
+    )
     for el in elements {
-      let chapt = counter(heading).at(el.location()).at(0)
-      let num = counter(el.kind + "-chapter" + str(chapt)).at(el.location()).at(0) + 1
-      let page_num = counter(page).at(el.location()).first()
+      let loc = el.location()
+      let chapt = counter(heading).at(loc).at(0)
+      let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+      let page_num = counter(page).at(loc).first()
       let caption_body = to-string(el.caption.body)
+      
       str(chapt)
       "."
       str(num)
@@ -376,7 +385,7 @@
       [#page_num]
       linebreak()
     }
-  })
+  }
 }
 
 // Setting empty par
@@ -429,23 +438,21 @@
       let chapt = counter(heading).at(loc).at(0)
 
       link(loc)[#if el.kind == "image" or el.kind == "table" {
-          // counting 
-          let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
-          it.element.supplement
-          " "
-          str(chapt)
-          "."
-          str(num)
-        } else if el.kind == "thmenv" {
-          let thms = query(selector(<meta:thmenvcounter>).after(loc), loc)
-          let number = thmcounters.at(thms.first().location()).at("latest")
-          it.element.supplement
-          " "
-          numbering(it.element.numbering, ..number)
-        } else {
-          it
-        }
-      ]
+        let num = counter(el.kind + "-chapter" + str(chapt)).at(loc).at(0) + 1
+        it.element.supplement
+        " "
+        str(chapt)
+        "."
+        str(num)
+      } else if el.kind == "thmenv" {
+        let thms = query(selector(<meta:thmenvcounter>))
+        let number = thmcounters.at(thms.first().location()).at("latest")
+        it.element.supplement
+        " "
+        numbering(it.element.numbering, ..number)
+      } else {
+        it
+      }]
     } else if it.element != none and it.element.func() == math.equation {
       let el = it.element
       let loc = el.location()
@@ -486,11 +493,11 @@
       it.supplement
       " " + it.counter.display(it.numbering)
       " " + it.caption.body
-      locate(loc => {
-        let chapt = counter(heading).at(loc).at(0)
+      context {
+        let chapt = counter(heading).at(it.location()).at(0)
         let c = counter("image-chapter" + str(chapt))
         c.step()
-      })
+      }
     } else if it.kind == "table" {
       set text(size: 12pt)
       it.supplement
@@ -498,11 +505,11 @@
       " " + it.caption.body
       set text(size: 10.5pt)
       it.body
-      locate(loc => {
-        let chapt = counter(heading).at(loc).at(0)
+      context {
+        let chapt = counter(heading).at(it.location()).at(0)
         let c = counter("table-chapter" + str(chapt))
         c.step()
-      })
+      }
     } else {
       it
     }
@@ -514,10 +521,11 @@
   // Set the body font. TeX Gyre Pagella is a free alternative
   // to Palatino.
   set text(font: (
-    "Nimbus Roman",
-    // "Hiragino Mincho ProN",
-    // "MS Mincho",
-    "Noto Serif CJK JP",
+    "Times New Roman", // Windows
+    // "Nimbus Roman", // Ubuntu
+    // "Hiragino Mincho ProN", // Mac
+    "Yu Mincho", // Windows
+    // "Noto Serif CJK JP", // Ubuntu
     ), size: 12pt)
 
   // Configure the page properties.
@@ -568,9 +576,7 @@
   ]
 
   set page(
-    footer: [
-      #align(center)[#counter(page).display("i")]
-    ]
+    numbering: "i",
   )
 
   counter(page).update(1)
@@ -580,7 +586,7 @@
 
   // Configure paragraph properties.
   set par(leading: 0.78em, first-line-indent: 12pt, justify: true)
-  show par: set block(spacing: 0.78em)
+  set par(spacing: 0.78em)
 
    // Configure chapter headings.
   set heading(numbering: (..nums) => {
@@ -626,9 +632,7 @@
   toc_tbl()
 
   set page(
-    footer: [
-      #align(center)[#counter(page).display("1")]
-    ]
+    numbering: "1",
   )
 
   counter(page).update(1)
