@@ -8,6 +8,18 @@
 - pdf生成 \
   同じく右上にあるこんな感じ ![image](https://github.com/user-attachments/assets/740fee65-06ba-4d58-a352-23963d6891fb) のアイコンをクリック
 
+## フォント変更
+`template.typ`内で
+```typst
+set text(font: (
+    "Times New Roman", // Windows
+    // "Nimbus Roman", // Ubuntu
+    // "Hiragino Mincho ProN", // Mac
+    "Yu Mincho", // Windows
+    // "Noto Serif CJK JP", // Ubuntu
+    ),
+```
+を適宜コメントアウトして変更
   
 ## 参考
 - [公式マニュアル](https://typst.app/docs/)
