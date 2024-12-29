@@ -12,3 +12,4 @@
 ## 参考
 - [公式マニュアル](https://typst.app/docs/)
 - [Tinymist](https://github.com/Myriad-Dreamin/tinymist)
+- [LatexからTypstへの数式変換](https://tex2typst-math.tompython.com)
