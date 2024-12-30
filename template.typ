@@ -201,7 +201,13 @@
 // Definition of image format
 #let img(img, caption: "") = {
   figure(
-    img,
+    if type(img) == "content" {
+      // For contents such as commutative graphs
+      align(center, img)
+    } else {
+      // For normal images
+      img
+    },
     caption: caption,
     supplement: [図],
     numbering: image_num,
